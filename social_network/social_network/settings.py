@@ -39,7 +39,11 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
 
+    # Manually installed
     'rest_framework',
+    'django_filters',
+
+    # My apps
     'posts',
     'users',
 ]
@@ -52,6 +56,9 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+
+    # Manually written
+    'users.middleware.UpdateLastActivityMiddleware',
 ]
 
 ROOT_URLCONF = 'social_network.urls'
