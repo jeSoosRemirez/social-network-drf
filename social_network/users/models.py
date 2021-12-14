@@ -45,6 +45,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_staff = models.BooleanField(default=False)
     date_joined = models.DateTimeField(default=timezone.now)
     token_key = models.CharField(max_length=512, default="")
+    last_activity = models.DateTimeField(default=timezone.now)
 
     objects = UserManager()
 
