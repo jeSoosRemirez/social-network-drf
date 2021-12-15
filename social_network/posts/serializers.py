@@ -1,7 +1,5 @@
 from rest_framework import serializers
-# from posts.models import Like
-from posts.models import Post
-from users.models import User
+from posts.models import Post, Like
 
 
 class PostCreateSerializer(serializers.ModelSerializer):
@@ -32,3 +30,13 @@ class PostDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = ['id', 'text', 'created_time']
+
+
+class AnalyticsSerializer(serializers.ModelSerializer):
+    """
+    Likes analytic
+    """
+
+    class Meta:
+        model = Like
+        fields = '__all__'
