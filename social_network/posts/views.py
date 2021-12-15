@@ -1,5 +1,4 @@
-from collections import Counter
-from itertools import groupby
+from django.db.models import Count
 from rest_framework.decorators import api_view
 from rest_framework.generics import RetrieveUpdateDestroyAPIView, CreateAPIView, ListAPIView, get_object_or_404, \
     GenericAPIView
@@ -8,7 +7,7 @@ from rest_framework.response import Response
 from rest_framework.reverse import reverse
 from rest_framework.views import APIView
 from posts.models import Post, Like
-from posts.serializers import PostListSerializer, PostDetailSerializer, PostCreateSerializer, AnalyticsSerializer
+from posts.serializers import PostListSerializer, PostDetailSerializer, PostCreateSerializer
 from users.backends import JWTAuthentication
 from datetime import datetime
 
@@ -69,31 +68,22 @@ class AnalyticView(GenericAPIView):
     permission_classes = (IsAuthenticated,)
     authentication_classes = (JWTAuthentication,)
     queryset = Like.objects.all()
-    serializer_class = AnalyticsSerializer
 
     def get_queryset(self, date_from, date_to):
-        date_from = datetime.strptime(date_from, '%Y-%m-%d')
-        date_to = datetime.strptime(date_to, '%Y-%m-%d')
+        try:
+            date_from = datetime.strptime(date_from, '%Y-%m-%d')
+            date_to = datetime.strptime(date_to, '%Y-%m-%d')
+        except ValueError:
+            raise ValueError("Incorrect data format, should be YYYY-MM-DD")
         queryset = Like.objects.filter(created_time__gte=date_from, created_time__lte=date_to).order_by('created_time')
         return queryset
 
     def get(self, request):
         queryset = self.get_queryset(request.query_params['date_from'], request.query_params['date_to'])
-        filtered_queryset = self.filter_queryset(queryset)
-        likes_by_date = groupby(filtered_queryset,
-                                lambda like: like.created_time.strftime("%Y-%m-%d"))
+        grouped_by = self.filter_queryset(queryset).values('created_time__date').annotate(
+            total_likes=Count('id')).values('created_time__date', 'total_likes').order_by('created_time__date')
 
-        analytics = []
-        for date, likes in likes_by_date:
-            count = Counter(like.post_id for like in likes)
-            analytics.append(
-                {
-                    'date': date,
-                    'total_likes': sum(count.values()),
-                }
-            )
-
-        return Response(analytics)
+        return Response(grouped_by)
 
 
 @api_view(['GET'])
